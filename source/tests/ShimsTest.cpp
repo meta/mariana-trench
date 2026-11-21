@@ -112,7 +112,10 @@ TEST_F(ShimsTest, TestBuildCrossComponentAnalysisShims) {
           R"(
             (method (public) "Landroid/content/Intent;.setClass:(Landroid/content/Context;Ljava/lang/Class;)Landroid/content/Intent;"
             (
-              (return-void)
+              (load-param-object v0)
+              (load-param-object v1)
+              (load-param-object v2)
+              (return-object v0)
             )
             ))",
       });
