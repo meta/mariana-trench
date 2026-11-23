@@ -55,7 +55,7 @@ const DexMethod* MT_NULLABLE resolve_call(
     const Method* caller,
     const IRInstruction* instruction) {
   mt_assert(caller != nullptr);
-  mt_assert(opcode::is_an_invoke(instruction->opcode()));
+  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
 
   DexMethodRef* dex_method_reference = instruction->get_method();
   mt_assert_log(
@@ -708,7 +708,7 @@ bool is_field_sink_instruction(const IRInstruction* instruction) {
 
 bool is_field_or_invoke_instruction(const IRInstruction* instruction) {
   return is_field_instruction(instruction) ||
-      opcode::is_an_invoke(instruction->opcode());
+      opcode::is_a_method_invoke(instruction->opcode());
 }
 
 InstructionCallGraphInformation process_instruction(
@@ -766,7 +766,7 @@ InstructionCallGraphInformation process_instruction(
     return instruction_information;
   }
 
-  if (!opcode::is_an_invoke(instruction->opcode())) {
+  if (!opcode::is_a_method_invoke(instruction->opcode())) {
     return instruction_information;
   }
 
@@ -972,7 +972,7 @@ CallTarget CallTarget::from_call_instruction(
     const Types& types,
     const ClassHierarchies& class_hierarchies,
     const Overrides& override_factory) {
-  mt_assert(opcode::is_an_invoke(instruction->opcode()));
+  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
   if (is_static_invoke(instruction)) {
     return CallTarget::static_call(
         instruction, resolved_base_callee, CallKind::Normal, call_index);

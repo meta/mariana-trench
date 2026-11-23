@@ -468,7 +468,7 @@ Bounds Highlights::get_local_position_bounds(
         local_position.instruction()->get_field()->get_name()->str();
     return get_iput_local_position_bounds(lines, field_name, line_number);
   }
-  if (opcode::is_an_invoke(local_position.instruction()->opcode())) {
+  if (opcode::is_a_method_invoke(local_position.instruction()->opcode())) {
     const auto* callee_dex_method = local_position.instruction()->get_method();
     if (!callee_dex_method->as_def()) {
       return empty_bounds;

@@ -281,7 +281,7 @@ CalleeModel get_callee(
     const IRInstruction* instruction,
     const DexPosition* MT_NULLABLE dex_position,
     const RegisterMemoryLocationsMap& register_memory_locations_map) {
-  mt_assert(opcode::is_an_invoke(instruction->opcode()));
+  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
 
   auto call_target = context->call_graph.callee(context->method(), instruction);
   if (!call_target.resolved()) {

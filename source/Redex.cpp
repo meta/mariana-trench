@@ -131,7 +131,7 @@ void mark_methods_without_side_effects(
 const DexMethod* MT_NULLABLE callee_without_side_effects(
     const DexMethod* caller,
     IRInstruction* instruction) {
-  if (!opcode::is_an_invoke(instruction->opcode())) {
+  if (!opcode::is_a_method_invoke(instruction->opcode())) {
     return nullptr;
   }
   const DexMethod* callee = resolve_method_deprecated(

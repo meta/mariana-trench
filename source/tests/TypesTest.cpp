@@ -521,7 +521,7 @@ TEST_F(TypesTest, InvokeReturnTypeTracking) {
   const auto* block = code->cfg().blocks().front();
   for (const auto& entry : *block) {
     const IRInstruction* instruction = entry.insn;
-    if (opcode::is_an_invoke(instruction->opcode())) {
+    if (opcode::is_a_method_invoke(instruction->opcode())) {
       const auto& environment = context.types->environment(method, instruction);
 
       // Query RESULT_REGISTER from the environment

@@ -46,7 +46,7 @@ bool has_reflection(const IRCode& code) {
     for (auto& entry : InstructionIterable(block)) {
       IRInstruction* instruction = entry.insn;
 
-      if (!opcode::is_an_invoke(instruction->opcode())) {
+      if (!opcode::is_a_method_invoke(instruction->opcode())) {
         continue;
       }
 
@@ -80,7 +80,7 @@ bool has_reflection(const IRCode& code) {
 }
 
 bool is_interesting_opcode(IROpcode opcode) {
-  return opcode::is_an_invoke(opcode) || opcode::is_an_iput(opcode);
+  return opcode::is_a_method_invoke(opcode) || opcode::is_an_iput(opcode);
 }
 
 /**
@@ -164,7 +164,7 @@ TypeEnvironments make_environments(
     // any sense -- the register will always be populated by the return value of
     // the method call without being used by any other instructions, so we do
     // not introduce inconsistencies in our type environment.
-    if (opcode::is_an_invoke(instruction->opcode())) {
+    if (opcode::is_a_method_invoke(instruction->opcode())) {
       const auto* method = instruction->get_method();
       mt_assert_log(
           method != nullptr, "invoke instruction has no method reference");
@@ -520,7 +520,7 @@ std::unique_ptr<TypeEnvironments> Types::infer_types_for_method(
       // contains the declared return type from the method signature we
       // populated during `make_environments` and is then refined with global
       // type analysis results.
-      if (opcode::is_an_invoke(instruction->opcode())) {
+      if (opcode::is_a_method_invoke(instruction->opcode())) {
         ir_registers.push_back(RESULT_REGISTER);
       }
 
@@ -680,7 +680,7 @@ const DexType* MT_NULLABLE Types::source_type(
 const DexType* MT_NULLABLE Types::receiver_type(
     const Method* method,
     const IRInstruction* instruction) const {
-  mt_assert(opcode::is_an_invoke(instruction->opcode()));
+  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
 
   if (opcode::is_invoke_static(instruction->opcode())) {
     return nullptr;
@@ -692,7 +692,7 @@ const DexType* MT_NULLABLE Types::receiver_type(
 const std::unordered_set<const DexType*>& Types::receiver_local_extends(
     const Method* method,
     const IRInstruction* instruction) const {
-  mt_assert(opcode::is_an_invoke(instruction->opcode()));
+  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
 
   if (opcode::is_invoke_static(instruction->opcode())) {
     return empty_local_extends;
