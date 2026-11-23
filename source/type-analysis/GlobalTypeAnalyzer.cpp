@@ -96,14 +96,14 @@ void scan_any_init_reachables(
       continue;
     }
     if (!cg.has_node(method)) {
-      TRACE(
-          TYPE, 5, "[any init reachables] missing node in cg %s", SHOW(method));
+      TRACE(TYPE, 5, "[any init reachables] missing node in cg %s",
+            SHOW(method));
       continue;
     }
     const auto& callees = resolve_callees_in_graph(cg, insn);
     for (const DexMethod* callee : UnorderedIterable(callees)) {
-      scan_any_init_reachables(
-          cg, method_override_graph, callee, false, reachables);
+      scan_any_init_reachables(cg, method_override_graph, callee, false,
+                               reachables);
     }
   }
   if (!trace_callbacks) {
@@ -124,8 +124,8 @@ void scan_any_init_reachables(
       }
     }
     if (overrides_external) {
-      scan_any_init_reachables(
-          cg, method_override_graph, vmethod, false, reachables);
+      scan_any_init_reachables(cg, method_override_graph, vmethod, false,
+                               reachables);
     }
   }
 }
@@ -502,13 +502,13 @@ void GlobalTypeAnalysis::find_any_init_reachables(
         }
       }
       if (overrides_external) {
-        scan_any_init_reachables(
-            *cg, method_override_graph, vmethod, false, m_any_init_reachables);
+        scan_any_init_reachables(*cg, method_override_graph, vmethod, false,
+                                 m_any_init_reachables);
       }
     }
   });
-  TRACE(
-      TYPE, 2, "[any init reachables] size %zu", m_any_init_reachables.size());
+  TRACE(TYPE, 2, "[any init reachables] size %zu",
+        m_any_init_reachables.size());
 }
 
 namespace {
@@ -564,8 +564,8 @@ std::unique_ptr<GlobalTypeAnalyzer> GlobalTypeAnalysis::analyze(
   auto cg =
       m_use_multiple_callee_callgraph
           ? std::make_shared<call_graph::Graph>(
-                call_graph::multiple_callee_graph(
-                    *method_override_graph, scope, 5))
+                call_graph::multiple_callee_graph(*method_override_graph, scope,
+                                                  5))
           : std::make_shared<call_graph::Graph>(
                 call_graph::single_callee_graph(*method_override_graph, scope));
   TRACE(TYPE,
@@ -599,8 +599,11 @@ std::unique_ptr<GlobalTypeAnalyzer> GlobalTypeAnalysis::analyze(
   EligibleIfields eligible_ifields;
   if (m_only_aggregate_safely_inferrable_fields) {
     eligible_ifields =
-        constant_propagation::gather_safely_inferable_ifield_candidates(scope,
-                                                                        {});
+        constant_propagation::gather_safely_inferable_ifield_candidates(
+            scope,
+            constant_propagation::gather_ifields_written_only_by_constructors(
+                scope),
+            {});
   }
   size_t iteration_cnt = 0;
 
