@@ -405,6 +405,13 @@ void apply_aliasing_propagations(
 
 } // namespace
 
+bool ForwardAliasTransfer::analyze_dynamic_invoke(
+    MethodContext* context,
+    const IRInstruction* instruction,
+    ForwardAliasEnvironment* environment) {
+  return analyze_invoke(context, instruction, environment);
+}
+
 bool ForwardAliasTransfer::analyze_invoke(
     MethodContext* context,
     const IRInstruction* instruction,

@@ -1,0 +1,168 @@
+{
+  "metadata" :
+  {
+    "@generated" : true
+  },
+  "models" :
+  [
+    {
+      "issues" :
+      [
+        {
+          "always_features" :
+          [
+            "via-obscure"
+          ],
+          "callee" : "LSink;.sink:(LData;)V",
+          "position" :
+          {
+            "line" : 3,
+            "path" : "Flow.java"
+          },
+          "rule" : 1,
+          "sink_index" : "0",
+          "sinks" :
+          [
+            {
+              "call_info" :
+              {
+                "call_kind" : "Origin",
+                "port" : "Argument(1)",
+                "position" :
+                {
+                  "line" : 3,
+                  "path" : "Flow.java"
+                }
+              },
+              "kinds" :
+              [
+                {
+                  "callee_interval" :
+                  [
+                    4,
+                    5
+                  ],
+                  "kind" : "TestSink",
+                  "origins" :
+                  [
+                    {
+                      "method" : "LSink;.sink:(LData;)V",
+                      "port" : "Argument(1)"
+                    }
+                  ],
+                  "preserves_type_context" : true
+                }
+              ]
+            }
+          ],
+          "sources" :
+          [
+            {
+              "call_info" :
+              {
+                "call_kind" : "Origin",
+                "port" : "Return",
+                "position" :
+                {
+                  "line" : 1,
+                  "path" : "Flow.java"
+                }
+              },
+              "kinds" :
+              [
+                {
+                  "callee_interval" :
+                  [
+                    4,
+                    5
+                  ],
+                  "kind" : "TestSource",
+                  "origins" :
+                  [
+                    {
+                      "method" : "LSource;.source:()LData;",
+                      "port" : "Return"
+                    }
+                  ],
+                  "preserves_type_context" : true
+                }
+              ],
+              "local_features" :
+              {
+                "always_features" :
+                [
+                  "via-obscure"
+                ]
+              },
+              "local_positions" :
+              [
+                {
+                  "line" : 2
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method" : "LFlow;.flow:(LSink;Ljava/lang/invoke/MethodHandle;)V",
+      "position" :
+      {
+        "line" : 0,
+        "path" : "Flow.java"
+      },
+      "sinks" :
+      [
+        {
+          "port" : "Argument(2)",
+          "taint" :
+          [
+            {
+              "call_info" :
+              {
+                "call_kind" : "Origin",
+                "port" : "Argument(1)",
+                "position" :
+                {
+                  "line" : 3,
+                  "path" : "Flow.java"
+                }
+              },
+              "kinds" :
+              [
+                {
+                  "callee_interval" :
+                  [
+                    4,
+                    5
+                  ],
+                  "kind" : "TestSink",
+                  "origins" :
+                  [
+                    {
+                      "method" : "LSink;.sink:(LData;)V",
+                      "port" : "Argument(1)"
+                    }
+                  ],
+                  "preserves_type_context" : true
+                }
+              ],
+              "local_features" :
+              {
+                "always_features" :
+                [
+                  "via-obscure"
+                ]
+              },
+              "local_positions" :
+              [
+                {
+                  "line" : 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1291,6 +1291,13 @@ void check_artificial_calls_effect_flows(
 
 } // namespace
 
+bool ForwardTaintTransfer::analyze_dynamic_invoke(
+    MethodContext* context,
+    const IRInstruction* instruction,
+    ForwardTaintEnvironment* environment) {
+  return analyze_invoke(context, instruction, environment);
+}
+
 bool ForwardTaintTransfer::analyze_invoke(
     MethodContext* context,
     const IRInstruction* instruction,

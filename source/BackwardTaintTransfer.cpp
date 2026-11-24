@@ -896,6 +896,13 @@ void apply_call_effects(
 
 } // namespace
 
+bool BackwardTaintTransfer::analyze_dynamic_invoke(
+    MethodContext* context,
+    const IRInstruction* instruction,
+    BackwardTaintEnvironment* environment) {
+  return analyze_invoke(context, instruction, environment);
+}
+
 bool BackwardTaintTransfer::analyze_invoke(
     MethodContext* context,
     const IRInstruction* instruction,

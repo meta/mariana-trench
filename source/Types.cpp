@@ -80,7 +80,7 @@ bool has_reflection(const IRCode& code) {
 }
 
 bool is_interesting_opcode(IROpcode opcode) {
-  return opcode::is_a_method_invoke(opcode) || opcode::is_an_iput(opcode);
+  return opcode::is_an_invoke(opcode) || opcode::is_an_iput(opcode);
 }
 
 /**
@@ -155,8 +155,8 @@ TypeEnvironments make_environments(
     }
 
     // We populate the entry of RESULT_REGISTER in the type environment with the
-    // declared return type from the method prototype. It is important to note
-    // that this does not read from the entry type state of the invoke
+    // declared return type from the call-site prototype. It is important to
+    // note that this does not read from the entry type state of the invoke
     // instruction -- RESULT_REGISTER at this point holds values that are not
     // relevant to the invoke. On the other hand, though we are "ahead of time"
     // by setting the type of RESULT_REGISTER to the return type in the entry
@@ -164,12 +164,8 @@ TypeEnvironments make_environments(
     // any sense -- the register will always be populated by the return value of
     // the method call without being used by any other instructions, so we do
     // not introduce inconsistencies in our type environment.
-    if (opcode::is_a_method_invoke(instruction->opcode())) {
-      const auto* method = instruction->get_method();
-      mt_assert_log(
-          method != nullptr, "invoke instruction has no method reference");
-
-      const auto* return_type = method->get_proto()->get_rtype();
+    if (opcode::is_an_invoke(instruction->opcode())) {
+      const auto* return_type = instruction->get_callsite_proto()->get_rtype();
       if (return_type != type::_void()) {
         environment.emplace(RESULT_REGISTER, TypeValue(return_type));
       }
@@ -520,7 +516,7 @@ std::unique_ptr<TypeEnvironments> Types::infer_types_for_method(
       // contains the declared return type from the method signature we
       // populated during `make_environments` and is then refined with global
       // type analysis results.
-      if (opcode::is_a_method_invoke(instruction->opcode())) {
+      if (opcode::is_an_invoke(instruction->opcode())) {
         ir_registers.push_back(RESULT_REGISTER);
       }
 
@@ -680,9 +676,9 @@ const DexType* MT_NULLABLE Types::source_type(
 const DexType* MT_NULLABLE Types::receiver_type(
     const Method* method,
     const IRInstruction* instruction) const {
-  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
+  mt_assert(opcode::is_an_invoke(instruction->opcode()));
 
-  if (opcode::is_invoke_static(instruction->opcode())) {
+  if (!instruction->invoke_has_receiver()) {
     return nullptr;
   }
 
@@ -692,9 +688,9 @@ const DexType* MT_NULLABLE Types::receiver_type(
 const std::unordered_set<const DexType*>& Types::receiver_local_extends(
     const Method* method,
     const IRInstruction* instruction) const {
-  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
+  mt_assert(opcode::is_an_invoke(instruction->opcode()));
 
-  if (opcode::is_invoke_static(instruction->opcode())) {
+  if (!instruction->invoke_has_receiver()) {
     return empty_local_extends;
   }
 

@@ -219,8 +219,11 @@ class Model final {
   void add_mode(Model::Mode mode, Context& context);
   void add_taint_in_taint_out(Context& context);
 
-  // Intended to be used for methods whose concrete definition is unknown,
-  // i.e. `dex_method_reference->is_def() == false`.
+  // Intended to be used for calls whose target is unknown: calls to methods
+  // whose concrete definition is unknown, i.e.
+  // `dex_method_reference->is_def() == false`, and `invoke-polymorphic` and
+  // `invoke-custom`, which call whatever their method handle or call site
+  // links to.
   void add_taint_in_taint_out(
       Context& context,
       const IRInstruction* instruction);

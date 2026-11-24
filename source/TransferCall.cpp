@@ -281,15 +281,12 @@ CalleeModel get_callee(
     const IRInstruction* instruction,
     const DexPosition* MT_NULLABLE dex_position,
     const RegisterMemoryLocationsMap& register_memory_locations_map) {
-  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
+  mt_assert(opcode::is_an_invoke(instruction->opcode()));
 
   auto call_target = context->call_graph.callee(context->method(), instruction);
   if (!call_target.resolved()) {
     WARNING_OR_DUMP(
-        context,
-        3,
-        "Unable to resolve call to `{}`",
-        show(instruction->get_method()));
+        context, 3, "Unable to resolve call `{}`", show(instruction));
   } else {
     LOG_OR_DUMP(context, 4, "Call resolved to `{}`", call_target);
   }
@@ -313,7 +310,7 @@ CalleeModel get_callee(
   LOG_OR_DUMP(context, 4, "Callee model: {}", model);
 
   return CalleeModel{
-      instruction->get_method(),
+      instruction->has_method() ? instruction->get_method() : nullptr,
       call_target.resolved_base_callee(),
       position,
       call_target.call_kind(),

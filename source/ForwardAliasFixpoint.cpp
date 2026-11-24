@@ -63,6 +63,13 @@ class ShouldStoreAliasResults final
     return false;
   }
 
+  static bool analyze_dynamic_invoke(
+      const IRInstruction* /* instruction */,
+      bool* should_store_alias_results) {
+    *should_store_alias_results = true;
+    return false;
+  }
+
   static bool analyze_iput(
       const IRInstruction* /* instruction */,
       bool* should_store_alias_results) {

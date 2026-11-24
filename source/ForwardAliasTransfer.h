@@ -44,6 +44,13 @@ class ForwardAliasTransfer final : public InstructionAnalyzerBase<
       const IRInstruction* instruction,
       ForwardAliasEnvironment* taint);
 
+  // `invoke-polymorphic` and `invoke-custom`, handled like a call whose
+  // target cannot be resolved.
+  static bool analyze_dynamic_invoke(
+      MethodContext* context,
+      const IRInstruction* instruction,
+      ForwardAliasEnvironment* taint);
+
   static bool analyze_iput(
       MethodContext* context,
       const IRInstruction* instruction,

@@ -9,6 +9,10 @@
 
 #include <gmock/gmock.h>
 
+#include <DexCallSite.h>
+#include <DexMethodHandle.h>
+#include <RedexContext.h>
+
 #include <mariana-trench/JsonValidation.h>
 #include <mariana-trench/Model.h>
 #include <mariana-trench/Redex.h>
@@ -230,6 +234,76 @@ TEST_F(ModelTest, ModelConstructor) {
           {/* input */ AccessPath(Root(Root::Kind::Argument, 1)),
            Taint{test::make_propagation_taint_config(
                context.kind_factory->local_return())}},
+      }));
+}
+
+// `invoke-polymorphic` and `invoke-custom` call whatever their method handle
+// or call site links to, so their model propagates every argument, including
+// the method handle that `invoke-polymorphic` calls, into the result. They
+// name no method that could be missing.
+TEST_F(ModelTest, TaintInTaintOutOfDynamicInvoke) {
+  Scope scope;
+  DexStore store("stores");
+  store.add_classes(scope);
+  auto context = test::make_context(store);
+
+  auto propagation_to_return = test::make_propagation_taint_config(
+      context.kind_factory->local_return(),
+      /* output_paths */ PathTreeDomain{{Path{}, CollapseDepth::zero()}},
+      /* inferred_features */ FeatureMayAlwaysSet::bottom(),
+      /* locally_inferred_features */ FeatureMayAlwaysSet::bottom(),
+      /* user_features */
+      FeatureSet{context.feature_factory->get("via-obscure")});
+
+  IRInstruction invoke_polymorphic(OPCODE_INVOKE_POLYMORPHIC);
+  invoke_polymorphic
+      .set_signature_polymorphic(
+          DexMethod::make_method(
+              "Ljava/lang/invoke/MethodHandle;.invokeExact:"
+              "([Ljava/lang/Object;)Ljava/lang/Object;"),
+          DexProto::make_proto("(LData;)LData;"))
+      ->set_srcs_size(2)
+      ->set_src(0, 0)
+      ->set_src(1, 1);
+  auto polymorphic_model = Model(
+      /* method */ nullptr,
+      context,
+      Model::Mode::SkipAnalysis | Model::Mode::AddViaObscureFeature);
+  polymorphic_model.add_taint_in_taint_out(context, &invoke_polymorphic);
+  EXPECT_EQ(
+      polymorphic_model.propagations(),
+      (TaintAccessPathTree{
+          {/* input */ AccessPath(Root(Root::Kind::Argument, 0)),
+           Taint{propagation_to_return}},
+          {/* input */ AccessPath(Root(Root::Kind::Argument, 1)),
+           Taint{propagation_to_return}},
+      }));
+
+  auto* bootstrap = DexMethodHandle::make_method_handle(
+      METHOD_HANDLE_TYPE_INVOKE_STATIC,
+      DexMethod::make_method(
+          "LBoot;.bootstrap:(Ljava/lang/invoke/MethodHandles$Lookup;"
+          "Ljava/lang/String;Ljava/lang/invoke/MethodType;)"
+          "Ljava/lang/invoke/CallSite;"));
+  // `g_redex` owns call sites, as it does those read from a dex file.
+  auto* callsite = new DexCallSite(
+      bootstrap,
+      DexString::make_string("make"),
+      DexProto::make_proto("(LData;)LData;"),
+      /* linker_args */ {});
+  g_redex->publish_callsite(callsite);
+  IRInstruction invoke_custom(OPCODE_INVOKE_CUSTOM);
+  invoke_custom.set_callsite(callsite)->set_srcs_size(1)->set_src(0, 0);
+  auto custom_model = Model(
+      /* method */ nullptr,
+      context,
+      Model::Mode::SkipAnalysis | Model::Mode::AddViaObscureFeature);
+  custom_model.add_taint_in_taint_out(context, &invoke_custom);
+  EXPECT_EQ(
+      custom_model.propagations(),
+      (TaintAccessPathTree{
+          {/* input */ AccessPath(Root(Root::Kind::Argument, 0)),
+           Taint{propagation_to_return}},
       }));
 }
 

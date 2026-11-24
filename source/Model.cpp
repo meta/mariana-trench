@@ -791,8 +791,11 @@ void Model::add_taint_in_taint_out(
 
   // Not intended to be used for methods that have a concrete DexMethod*.
   mt_assert(method_ == nullptr);
-  const auto* dex_method_reference = instruction->get_method();
-  if (dex_method_reference->is_def()) {
+  // `invoke-polymorphic` and `invoke-custom` name no method that determines
+  // what they call.
+  const auto* MT_NULLABLE dex_method_reference =
+      instruction->has_method() ? instruction->get_method() : nullptr;
+  if (dex_method_reference != nullptr && dex_method_reference->is_def()) {
     // If this happens, it means methods were created after call graph
     // construction. They would not have been defined in the APK, so it should
     // not impact analysis results, but this is non-ideal behavior. Methods
@@ -808,21 +811,20 @@ void Model::add_taint_in_taint_out(
     return;
   }
 
-  if (dex_method_reference->get_proto()->get_rtype() == type::_void()) {
+  if (instruction->get_callsite_proto()->get_rtype() == type::_void()) {
     return;
   }
 
-  auto user_features =
-      FeatureSet{context.feature_factory->get_missing_method()};
+  auto user_features = FeatureSet::bottom();
+  if (dex_method_reference != nullptr) {
+    user_features.add(context.feature_factory->get_missing_method());
+  }
   if (modes_.test(Model::Mode::AddViaObscureFeature)) {
     user_features.add(context.feature_factory->get("via-obscure"));
   }
 
-  auto number_of_parameters =
-      dex_method_reference->get_proto()->get_args()->size();
-  if (!opcode::is_invoke_static(instruction->opcode())) {
-    ++number_of_parameters; // add 1 for "this" argument
-  }
+  // The receiver, if any, and the arguments of the call-site prototype.
+  auto number_of_parameters = instruction->invoke_srcs_size();
   // The number of registers given to the invoke instruction is the number of
   // parameters. If assertion fails, the computation for number of parameters
   // above is wrong which means we might be seeing invoke static on non-static

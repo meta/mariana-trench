@@ -35,10 +35,6 @@ namespace marianatrench {
 
 namespace {
 
-bool is_static_invoke(const IRInstruction* instruction) {
-  return opcode::is_invoke_static(instruction->opcode());
-}
-
 bool is_virtual_invoke(const IRInstruction* instruction) {
   switch (instruction->opcode()) {
     case OPCODE_INVOKE_VIRTUAL:
@@ -972,8 +968,8 @@ CallTarget CallTarget::from_call_instruction(
     const Types& types,
     const ClassHierarchies& class_hierarchies,
     const Overrides& override_factory) {
-  mt_assert(opcode::is_a_method_invoke(instruction->opcode()));
-  if (is_static_invoke(instruction)) {
+  mt_assert(opcode::is_an_invoke(instruction->opcode()));
+  if (!instruction->invoke_has_receiver()) {
     return CallTarget::static_call(
         instruction, resolved_base_callee, CallKind::Normal, call_index);
   } else if (is_virtual_invoke(instruction)) {

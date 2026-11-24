@@ -59,7 +59,9 @@ void log_instruction(
     const IRInstruction* instruction);
 
 struct CalleeModel {
-  const DexMethodRef* method_reference;
+  // The method the call names; null for `invoke-polymorphic` and
+  // `invoke-custom`, which name no method that determines what they call.
+  const DexMethodRef* MT_NULLABLE method_reference;
   const Method* MT_NULLABLE resolved_base_method;
   const Position* position;
   CallTarget::CallKind call_kind;

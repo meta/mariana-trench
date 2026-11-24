@@ -23,6 +23,6 @@ This page will cover the purpose of the pre-configured features to help you unde
 - cast:[...]
   - Cast features such as `cast:boolean` are applied when the tainted data is converted to that specific type. This allows for example to filter out data flows such as `taintedString.length()` where the returned tainted integer may no longer be of interest.
 - via-obscure
-  - Obscure methods are methods for which Mariana Trench doesn't have any byte code available. Therefore we generally apply taint-in-taint-out behaviour on these methods and add the feature `via-obscure` to tell the user that the data flow went along an obscure method.
+  - Obscure methods are methods for which Mariana Trench doesn't have any byte code available. Therefore we generally apply taint-in-taint-out behaviour on these methods and add the feature `via-obscure` to tell the user that the data flow went along an obscure method. Calls through `MethodHandle.invoke`/`invokeExact` (`invoke-polymorphic`) and `invoke-custom` call whatever their method handle or call site links to, so they are treated the same way.
 - via-[...]-broadening
   - Is applied when any of the four broaden operations is applied (see [Models](../models/#taint-broadening)).
