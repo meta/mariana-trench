@@ -284,6 +284,19 @@ bool CtorFieldAnalyzer::analyze_invoke(const DexType* class_under_init,
   return false;
 }
 
+bool CtorFieldAnalyzer::analyze_dynamic_invoke(const DexType* class_under_init,
+                                               const IRInstruction* insn,
+                                               DexTypeEnvironment* env) {
+  // Like an invoke of a method of the class under construction, the call can
+  // write the fields of the object.
+  if (class_under_init) {
+    env->clear_field_environment();
+  }
+  // Unlike the target of an invoke, an unknown call may return the object
+  // under construction, so forget whether the result is `this`.
+  return analyze_default(class_under_init, insn, env);
+}
+
 } // namespace local
 
 } // namespace type_analyzer

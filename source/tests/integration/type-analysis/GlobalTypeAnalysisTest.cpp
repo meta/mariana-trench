@@ -561,7 +561,10 @@ TEST_F(GlobalTypeAnalysisTest, UnassignedFields) {
 }
 
 // Tool-generated code: `LMethodHandleWrites;.main` stores a String in the
-// static field `f` and holds a method handle that puts `f`.
+// static field `f`, holds a method handle that puts `f` and constructs a
+// `LMethodHandleWrites;`. The constructor stores a String in the instance field
+// `mField`, puts null into it through a method handle and copies it into
+// `copy`.
 class MethodHandleFieldTypeTest : public GlobalTypeAnalysisTest {
  protected:
   void SetUp() override {
@@ -570,6 +573,32 @@ class MethodHandleFieldTypeTest : public GlobalTypeAnalysisTest {
     field_ = DexField::make_field("LMethodHandleWrites;.f:Ljava/lang/Object;")
                  ->make_concrete(ACC_PUBLIC | ACC_STATIC);
     creator.add_field(field_);
+    instance_field_ =
+        DexField::make_field("LMethodHandleWrites;.mField:Ljava/lang/Object;")
+            ->make_concrete(ACC_PUBLIC);
+    creator.add_field(instance_field_);
+    copy_ = DexField::make_field("LMethodHandleWrites;.copy:Ljava/lang/Object;")
+                ->make_concrete(ACC_PUBLIC | ACC_STATIC);
+    creator.add_field(copy_);
+    creator.add_method(assembler::method_from_string(R"(
+      (method (public constructor) "LMethodHandleWrites;.<init>:()V"
+       (
+        (load-param-object v0)
+        (invoke-direct (v0) "Ljava/lang/Object;.<init>:()V")
+        (const-string "value")
+        (move-result-pseudo-object v1)
+        (iput-object v1 v0 "LMethodHandleWrites;.mField:Ljava/lang/Object;")
+        (const-method-handle instance-put "LMethodHandleWrites;.mField:Ljava/lang/Object;")
+        (move-result-pseudo-object v2)
+        (const v3 0)
+        (invoke-polymorphic (v2 v0 v3) "Ljava/lang/invoke/MethodHandle;.invokeExact:([Ljava/lang/Object;)Ljava/lang/Object;" "(LMethodHandleWrites;Ljava/lang/Object;)V")
+        (iget-object v0 "LMethodHandleWrites;.mField:Ljava/lang/Object;")
+        (move-result-pseudo-object v4)
+        (sput-object v4 "LMethodHandleWrites;.copy:Ljava/lang/Object;")
+        (return-void)
+       )
+      )
+    )"));
     main_ = assembler::method_from_string(R"(
       (method (public static) "LMethodHandleWrites;.main:()V"
        (
@@ -578,6 +607,9 @@ class MethodHandleFieldTypeTest : public GlobalTypeAnalysisTest {
         (sput-object v0 "LMethodHandleWrites;.f:Ljava/lang/Object;")
         (const-method-handle static-put "LMethodHandleWrites;.f:Ljava/lang/Object;")
         (move-result-pseudo-object v1)
+        (new-instance "LMethodHandleWrites;")
+        (move-result-pseudo-object v2)
+        (invoke-direct (v2) "LMethodHandleWrites;.<init>:()V")
         (return-void)
        )
       )
@@ -600,6 +632,8 @@ class MethodHandleFieldTypeTest : public GlobalTypeAnalysisTest {
   }
 
   DexField* field_ = nullptr;
+  DexField* instance_field_ = nullptr;
+  DexField* copy_ = nullptr;
   DexMethod* main_ = nullptr;
 };
 
@@ -607,6 +641,13 @@ class MethodHandleFieldTypeTest : public GlobalTypeAnalysisTest {
 TEST_F(MethodHandleFieldTypeTest, FieldPutThroughMethodHandle) {
   auto wps = analyze();
   EXPECT_TRUE(wps.get_field_type(field_).is_top());
+}
+
+// So can the put method handle that the constructor calls, before the
+// constructor reads `mField` again.
+TEST_F(MethodHandleFieldTypeTest, FieldReadAfterMethodHandleCallInConstructor) {
+  auto wps = analyze();
+  EXPECT_TRUE(wps.get_field_type(copy_).is_top());
 }
 
 } // namespace marianatrench
