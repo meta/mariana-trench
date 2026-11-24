@@ -7,7 +7,10 @@
 
 #include <gtest/gtest.h>
 
+#include <Creators.h>
 #include <DexClass.h>
+#include <IRAssembler.h>
+#include <Walkers.h>
 
 #include <mariana-trench/tests/integration/type-analysis/TypeAnalysisTestBase.h>
 #include <mariana-trench/type-analysis/GlobalTypeAnalyzer.h>
@@ -555,6 +558,55 @@ TEST_F(GlobalTypeAnalysisTest, UnassignedFields) {
   EXPECT_TRUE(single_domain.is_none());
   const auto& set_domain = field_type.get_set_domain();
   EXPECT_EQ(set_domain.get_types(), get_type_set({}));
+}
+
+// Tool-generated code: `LMethodHandleWrites;.main` stores a String in the
+// static field `f` and holds a method handle that puts `f`.
+class MethodHandleFieldTypeTest : public GlobalTypeAnalysisTest {
+ protected:
+  void SetUp() override {
+    ClassCreator creator(DexType::make_type("LMethodHandleWrites;"));
+    creator.set_super(type::java_lang_Object());
+    field_ = DexField::make_field("LMethodHandleWrites;.f:Ljava/lang/Object;")
+                 ->make_concrete(ACC_PUBLIC | ACC_STATIC);
+    creator.add_field(field_);
+    main_ = assembler::method_from_string(R"(
+      (method (public static) "LMethodHandleWrites;.main:()V"
+       (
+        (const-string "value")
+        (move-result-pseudo-object v0)
+        (sput-object v0 "LMethodHandleWrites;.f:Ljava/lang/Object;")
+        (const-method-handle static-put "LMethodHandleWrites;.f:Ljava/lang/Object;")
+        (move-result-pseudo-object v1)
+        (return-void)
+       )
+      )
+    )");
+    creator.add_method(main_);
+    stores[0].add_classes({creator.create()});
+  }
+
+  WholeProgramState analyze() {
+    auto scope = build_class_scope(stores);
+    walk::code(scope, [](DexMethod*, IRCode& code) {
+      if (!code.cfg_built()) {
+        code.build_cfg();
+      }
+    });
+    main_->rstate.set_root();
+    auto options = test::make_default_options();
+    auto analysis = GlobalTypeAnalysis::make_default();
+    return analysis.analyze(scope, *options)->get_whole_program_state();
+  }
+
+  DexField* field_ = nullptr;
+  DexMethod* main_ = nullptr;
+};
+
+// The put method handle can store a value of any type in `f`.
+TEST_F(MethodHandleFieldTypeTest, FieldPutThroughMethodHandle) {
+  auto wps = analyze();
+  EXPECT_TRUE(wps.get_field_type(field_).is_top());
 }
 
 } // namespace marianatrench
